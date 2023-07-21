@@ -6,9 +6,9 @@ Python script to add or remove users to Webex Groups in bulk.
   4. Tested with Python version 3.11.4. Please refer to requirements.txt for the modules.
   
 # Usage
-Install python 3.11.4
-Run pip3 install requirements.txt
-The scripts requires three inputs. Access token, Group ID and name of the CSV file.
+  1. Install python 3.11.4
+  2. The script leverage requests and csv modules.
+  3. The scripts requires three inputs. Access token, Group ID and name of the CSV file.
 
 # Add Users to Group
 python3 BulkUsersGroupUpdateAdd.py
