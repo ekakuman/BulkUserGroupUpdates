@@ -26,17 +26,19 @@ def update_group_with_user_ids(access_token, group_id, user_ids):
     
     # Create the payload with the updated format
     members = [{"id": user_id, "operation": "add"} for user_id in user_ids.values()]
-    payload = {"members": members}
-    
-    response = requests.patch(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        successful_count = len(user_ids)
-        print(f"Group {group_id} updated successfully with {successful_count} users.")
-    else:
-        failed_count = len(user_ids)
-        print(f"Failed to update group {group_id}. Status code: {response.status_code}")
-        print(f"{successful_count} users were successfully updated.")
-        print(f"{failed_count} users failed to update.")
+    for count, user_id in enumerate(user_ids.values(), 1):
+        response = requests.patch(url, headers=headers, json={"members": [{"id": user_id, "operation": "add"}]})
+        if response.status_code == 200:
+            print(f"{count}, user_id {user_id} - Successfully updated.")
+        else:
+            print(f"{count}, user_id {user_id} - Failed to update. Status code: {response.status_code}")
+
+    successful_count = sum(1 for _ in user_ids)
+    failed_count = len(user_ids) - successful_count
+
+    print(f"\nGroup {group_id} update summary:")
+    print(f"Successfully updated {successful_count} users.")
+    print(f"Failed to update {failed_count} users.")
 
 def main():
     access_token = input("Enter Access Token: ")
