@@ -30,9 +30,13 @@ def update_group_with_user_ids(access_token, group_id, user_ids):
     
     response = requests.patch(url, headers=headers, json=payload)
     if response.status_code == 200:
-        print("Group updated successfully.")
+        successful_count = len(user_ids)
+        print(f"Group {group_id} updated successfully with {successful_count} users removed.")
     else:
-        print(f"Failed to update group. Status code: {response.status_code}")
+        failed_count = len(user_ids)
+        print(f"Failed to update group {group_id}. Status code: {response.status_code}")
+        print(f"{successful_count} users were successfully removed.")
+        print(f"{failed_count} users failed to remove.")
 
 def main():
     access_token = input("Enter Access Token: ")
