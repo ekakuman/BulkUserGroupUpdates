@@ -1,7 +1,8 @@
 import requests
 import csv
+import chardet
 
-def get_user_ids(access_token):
+def get_user_ids(access_token,email_list):
     base_url = "https://webexapis.com/v1"
     headers = {
         "Authorization": f"Bearer {access_token}"
@@ -10,7 +11,7 @@ def get_user_ids(access_token):
     response = requests.get(url, headers=headers)
     response_json = response.json()
     if response.status_code == 200:
-        user_ids = {user["emails"][0]: user["id"] for user in response_json["items"]}
+        user_ids = {user["emails"][0]: user["id"] for user in response_json["items"] if user["emails"][0] in email_list}
         return user_ids
     else:
         print(f"Failed to retrieve user list. Status code: {response.status_code}")
@@ -26,13 +27,15 @@ def update_group_with_user_ids(access_token, group_id, user_ids):
     
     # Create the payload with the updated format
     members = [{"id": user_id, "operation": "add"} for user_id in user_ids.values()]
-    for count, user_id in enumerate(user_ids.values(), 1):
+    for count, (email, user_id) in enumerate(user_ids.items(), 1):
         response = requests.patch(url, headers=headers, json={"members": [{"id": user_id, "operation": "add"}]})
-        if response.status_code == 200:
-            print(f"{count}, user_id {user_id} - Successfully updated.")
+        if response.status_code in (200, 201, 202):
+            print(f"{count}, user_id: {user_id}, email: {email} - Successfully updated.")
+        elif response.status_code == 204:
+            print(f"{count}, user_id: {user_id}, email: {email} - Successfully updated (No Content).")
         else:
-            print(f"{count}, user_id {user_id} - Failed to update. Status code: {response.status_code}")
-
+            print(f"{count}, user_id: {user_id}, email: {email} - Failed to update. Status code: {response.status_code}")
+            
     successful_count = sum(1 for _ in user_ids)
     failed_count = len(user_ids) - successful_count
 
@@ -47,13 +50,14 @@ def main():
 
     # Read user emails from the CSV file
     user_emails = []
-    with open(csv_file, "r") as csvfile:
-        reader = csv.reader(csvfile)
+    with open(csv_file, "r",encoding="utf-8-sig") as csvfile:
+        reader = csv.DictReader(csvfile)
+        print("CSV Headers:", reader.fieldnames)  # Print the header names to verify
         for row in reader:
-            user_emails.append(row[0])
+            user_emails.append(row["users"])  # Access email addresses using the header "users"
 
     # Get user IDs
-    user_ids = get_user_ids(access_token)
+    user_ids = get_user_ids(access_token, user_emails)
     if user_ids is None:
         return
 
